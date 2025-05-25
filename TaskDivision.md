@@ -1,6 +1,6 @@
-# Project Timeline & Task Division
+# Project Timeline & Task Division - 
 
-Today: 19.05.2025
+MMD GAN: Towards Deeper Understanding of Moment Matching Network
 
 ## Week 1 (May 19–23) – Code Setup, Data Setup
 - Meeting: Monday, May 19
@@ -15,6 +15,7 @@ Today: 19.05.2025
   - MNIST
   - CIFAR
   - Celeb-A
+- Repository Setup (Vasil Dakov)
 
 ## Week 2 (May 26–30) – Cleanup Models, Sample Runs, Evaluation
 - Meeting: Monday, May 26
