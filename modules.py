@@ -7,13 +7,13 @@ class Encoder(nn.Module):
         assert isize % 16 == 0, "image size has to be a multiple of 16"
 
         layers = []
-        # Initial conv + LeakyReLU (no BatchNorm)
+
         layers.append(nn.Conv2d(nc, ndf, 4, 2, 1, bias=False))
         layers.append(nn.LeakyReLU(0.2, inplace=True))
 
         csize, cndf = isize // 2, ndf
 
-        # Downsample until 4x4 spatial size
+
         while csize > 4:
             in_feat = cndf
             out_feat = cndf * 2
@@ -23,7 +23,6 @@ class Encoder(nn.Module):
             cndf = out_feat
             csize = csize // 2
 
-        # Final conv to latent vector (k channels, 1x1 spatial)
         layers.append(nn.Conv2d(cndf, k, 4, 1, 0, bias=False))
 
         self.main = nn.Sequential(*layers)
@@ -43,7 +42,7 @@ class Decoder(nn.Module):
             tisize *= 2
 
         layers = []
-        # Initial conv transpose + BatchNorm + ReLU
+
         layers.append(nn.ConvTranspose2d(k, cngf, 4, 1, 0, bias=False))
         layers.append(nn.BatchNorm2d(cngf))
         layers.append(nn.ReLU(True))
@@ -56,7 +55,7 @@ class Decoder(nn.Module):
             cngf //= 2
             csize *= 2
 
-        # Final conv transpose to output image channels + Tanh
+
         layers.append(nn.ConvTranspose2d(cngf, nc, 4, 2, 1, bias=False))
         layers.append(nn.Tanh())
 
@@ -64,6 +63,15 @@ class Decoder(nn.Module):
 
     def forward(self, input):
         return self.main(input)
+    
+class OneSidedHingeLoss(nn.Module):
+    def __init__(self):
+        super(OneSidedHingeLoss, self).__init__()
+        self.relu = nn.ReLU()
+
+    def forward(self, real_feat_mean, fake_feat_mean):
+        return -self.relu(real_feat_mean - fake_feat_mean).mean()
+
 
 class Generator(nn.Module):
     """
@@ -96,27 +104,4 @@ class Discriminator(nn.Module):
         f_enc = self.encoder(input)              # (batch, nz, 1, 1)
         f_dec = self.decoder(f_enc)              # (batch, nc, isize, isize)
         return f_enc, f_dec
-
-
-#TODO: change this implementations
-def grad_norm(m, norm_type=2):
-    total_norm = 0.0
-    for p in m.parameters():
-        if p.grad is not None:
-            param_norm = p.grad.data.norm(norm_type)
-            total_norm += param_norm.item() ** norm_type
-    total_norm = total_norm ** (1. / norm_type)
-    return total_norm
-
-
-def weights_init(m):
-    classname = m.__class__.__name__
-    if 'Conv' in classname:
-        nn.init.normal_(m.weight.data, 0.0, 0.02)
-    elif 'BatchNorm' in classname:
-        nn.init.normal_(m.weight.data, 1.0, 0.02)
-        nn.init.constant_(m.bias.data, 0)
-    elif 'Linear' in classname:
-        nn.init.normal_(m.weight.data, 0.0, 0.1)
-        nn.init.constant_(m.bias.data, 0)
 

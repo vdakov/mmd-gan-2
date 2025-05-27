@@ -8,23 +8,12 @@ import torchvision.utils as vutils
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 
-from classes import Generator, Discriminator, weights_init
-from utils import compute_mmd
-
-
-def get_dataloader(batch_size, image_size):
-    transform = transforms.Compose([
-        transforms.Resize(image_size),
-        transforms.CenterCrop(image_size),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5,) * 3, (0.5,) * 3),
-    ])
-    dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+from modules import Generator, Discriminator, OneSidedHingeLoss
+from utils import compute_mmd, weights_init, get_dataloader
 
 
 def main():
-    # Hyperparameters (adjust as needed)
+
     batch_size = 64
     image_size = 64
     nc = 3  # number of channels
@@ -36,12 +25,14 @@ def main():
     experiment_dir = './mmdgan_experiment'
     sigma_list = [1, 2, 4, 8, 16]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
 
     os.makedirs(experiment_dir, exist_ok=True)
 
     # Create models
     netG = Generator(image_size, nc, nz, ngf).to(device)
     netD = Discriminator(image_size, nc, nz, ndf, ngf).to(device)
+    hinge_loss = OneSidedHingeLoss().to(device)
 
     netG.apply(weights_init)
     netD.apply(weights_init)
@@ -66,7 +57,6 @@ def main():
     for epoch in range(max_iter):
         data_iter = iter(dataloader)
         i = 0
-        print("Epoch: ", epoch)
         while i < len(dataloader):
 
             # (1) Update D network
@@ -74,7 +64,7 @@ def main():
                 p.requires_grad = True
 
             Diters = 5 if gen_iterations >= 25 else 100
-            for a in range(Diters):
+            for _ in range(Diters):
 
                 if i == len(dataloader):
                     break
@@ -99,6 +89,9 @@ def main():
                 mmd2 = compute_mmd(f_enc_real, f_enc_fake, sigma_list)
                 mmd2 = nn.functional.relu(mmd2)
 
+                
+
+
                 # Autoencoder losses (L2 between input images and decoded output)
                 L2_real = nn.functional.mse_loss(f_dec_real.view(batch_size_cur, -1), real_images.view(batch_size_cur, -1))
                 L2_fake = nn.functional.mse_loss(f_dec_fake.view(batch_size_cur, -1), fake_images.view(batch_size_cur, -1))
@@ -110,10 +103,15 @@ def main():
                 lambda_ae_x = 8.0
                 lambda_ae_y = 8.0
                 lambda_rg = 16.0
-                loss_D = torch.sqrt(mmd2) - lambda_ae_x * L2_real - lambda_ae_y * L2_fake
+
+                hinge = hinge_loss(f_enc_real.mean(0), f_enc_fake.mean(0))
+                loss_D = torch.sqrt(mmd2) + lambda_rg * hinge - lambda_ae_x * L2_real - lambda_ae_y * L2_fake
 
                 loss_D.backward(mone)
                 optimizerD.step()
+
+                for p in netD.encoder.parameters():
+                    p.data.clamp_(-0.01, 0.01)
 
             # (2) Update G network
 
@@ -141,7 +139,9 @@ def main():
                 mmd2 = compute_mmd(f_enc_real, f_enc_fake, sigma_list)
                 mmd2 = nn.functional.relu(mmd2)
 
-                loss_G = torch.sqrt(mmd2)
+                hinge_g = hinge_loss(f_enc_real.mean(0), f_enc_fake.mean(0))
+                loss_G = torch.sqrt(mmd2) + lambda_rg * hinge_g
+
                 loss_G.backward(one)
                 optimizerG.step()
 
