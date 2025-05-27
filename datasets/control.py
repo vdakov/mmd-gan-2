@@ -1,4 +1,6 @@
 import numpy as np
+import sklearn
+import torch
 
 def get_mixture_distribution(mixture_list, weights, size=(10000, 2)):
     assert len(mixture_list) == len(weights), "Distributions and weights must match!"
@@ -46,3 +48,11 @@ def get_mixture_distribution(mixture_list, weights, size=(10000, 2)):
         else:
             raise ValueError(f"Unsupported distribution type: {distribution_type}. Check for typos and such!")
     return mixture_data
+
+def load_control(data, batch_size=64):
+    trainset, testset = sklearn.train_test_split(data, test_size=0.2)
+    
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False)
+
+    return trainloader, testloader
