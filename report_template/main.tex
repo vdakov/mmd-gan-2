@@ -1,0 +1,86 @@
+\documentclass[sigconf]{acmart}
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+% defining the \BibTeX command - from Oren Patashnik's original BibTeX documentation.
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08emT\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\usepackage{nicefrac}
+\usepackage{siunitx}
+\usepackage{array,framed}
+\usepackage{booktabs}
+\usepackage{
+  color,
+  float,
+  epsfig,
+  wrapfig,
+  graphics,
+  graphicx,
+  subcaption
+}
+
+\usepackage{setspace}
+\usepackage{latexsym,fancyhdr,url}
+\usepackage{enumerate}
+\usepackage{algorithm2e}
+\usepackage{algpseudocode}
+\usepackage{graphics}
+\usepackage{xparse} % argument parsing -- \edist
+\usepackage{xspace}
+\usepackage{multirow}
+\usepackage{csvsimple}
+\usepackage{balance}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+\DeclareGraphicsExtensions{%
+    .png,.PNG,%
+    .pdf,.PDF,%
+    .jpg,.mps,.jpeg,.jbig2,.jb2,.JPG,.JPEG,.JBIG2,.JB2}
+\usepackage{xstring}
+
+\input{defs}
+\usepackage{textcomp}
+\let\Bbbk\relax
+\usepackage{amssymb}
+\setlength{\belowcaptionskip}{-10pt} 
+\setlength{\footskip}{30pt}
+\setlength{\abovecaptionskip}{5pt plus 3pt minus 2pt} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\fancyhead{}
+
+\def\thetitle{Your Project Title}
+\title{\thetitle}
+
+\author{
+Your name
+}
+
+\affiliation{\small{Delft University of Technology}}
+\renewcommand{\shortauthors}{}
+% \begin{abstract}
+%   Abstractly this is an ACM CCS Template.
+
+% \end{abstract}
+\maketitle
+\keywords{LaTeX template, ACM CCS, ACM}
+
+\input{sections/s1_introduction}
+\input{sections/s2_background}
+\input{sections/s3_methodology}
+\input{sections/s4_results}
+\input{sections/s5_conclusion}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{bib}
+
+\appendix
+\input{sections/appendix}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
