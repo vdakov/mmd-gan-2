@@ -21,7 +21,7 @@ def train_autoencoder(trainloader, input_size, encoded_size, num_epochs, device,
     else:
         for ep in epoch_pbar:
             avg_loss = 0
-            for idx, (x, _) in enumerate(tqdm(trainloader, desc=f"Epoch {ep+1}/{num_epochs} (Batch)", leave=False)):
+            for idx, (x, _) in enumerate(tqdm(trainloader, desc=f"Epoch {ep+1}/{num_epochs} (Batch); Avg Loss: {avg_loss:.4f}", leave=False)):
                 x = x.view(x.size()[0], -1)
                 x = Variable(x).to(device)
                 _, decoded = encoder_net(x)
@@ -33,7 +33,7 @@ def train_autoencoder(trainloader, input_size, encoded_size, num_epochs, device,
             avg_loss /= (idx + 1)
             losses.append(avg_loss)
             
-        epoch_pbar.set_postfix({"Avg Loss": f"{avg_loss:.4f}", "Epoch": f"{ep+1}/{num_epochs}"})
+        # epoch_pbar.set_postfix({"Avg Loss": f"{avg_loss:.4f}", "Epoch": f"{ep+1}/{num_epochs}"})
 
         torch.save({
         'model_state_dict': encoder_net.state_dict(),
