@@ -7,25 +7,33 @@ class GMMN(nn.Module):
     def __init__(self, n_start, n_out):
         super(GMMN, self).__init__()
         self.fc1 = nn.Linear(n_start, 64)
+        self.bn1 = nn.BatchNorm1d(64)
+
         self.fc2 = nn.Linear(64, 256)
+        self.bn2 = nn.BatchNorm1d(256)
+
         self.fc3 = nn.Linear(256, 256)
+        self.bn3 = nn.BatchNorm1d(256)
+
         self.fc4 = nn.Linear(256, 784)
+        self.bn4 = nn.BatchNorm1d(784)
+
         self.fc5 = nn.Linear(784, n_out)
 
     def forward(self, samples):
-        x = F.relu(self.fc1(samples))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        x = F.relu(self.fc4(x))
-        x = F.sigmoid(self.fc5(x))
+        x = F.relu(self.bn1(self.fc1(samples)))
+        x = F.relu(self.bn2(self.fc2(x)))
+        x = F.relu(self.bn3(self.fc3(x)))
+        x = F.relu(self.bn4(self.fc4(x)))
+        x = torch.sigmoid(self.fc5(x))  # Use torch.sigmoid (not F.sigmoid, which is deprecated)
         return x
-    
+
     
     
 def generate_gmmn_samples(model, autoencoder, NOISE_SIZE, number, device='cpu'):
     model.eval()
     model.to(device) 
-
+    autoencoder.eval()
     generated_samples = []
 
     with torch.no_grad(): # Disable gradient calculations for inference
@@ -39,6 +47,7 @@ def generate_gmmn_samples(model, autoencoder, NOISE_SIZE, number, device='cpu'):
 
             # Generate sample
             sample = model(noise)
+            
             sample = autoencoder.decode(sample)
             generated_samples.append(sample.cpu()) # Move generated sample to CPU for storage
 
