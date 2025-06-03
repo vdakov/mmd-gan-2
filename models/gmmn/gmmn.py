@@ -34,6 +34,7 @@ def generate_gmmn_samples(model, autoencoder, NOISE_SIZE, number, device='cpu'):
     model.eval()
     model.to(device) 
     autoencoder.eval()
+
     generated_samples = []
 
     with torch.no_grad(): # Disable gradient calculations for inference
@@ -44,10 +45,8 @@ def generate_gmmn_samples(model, autoencoder, NOISE_SIZE, number, device='cpu'):
             # in batches for efficiency.
             noise = torch.rand((1, NOISE_SIZE)) * 2 - 1
             noise = noise.to(device) # Move noise to the same device as the model
-
             # Generate sample
             sample = model(noise)
-            
             sample = autoencoder.decode(sample)
             generated_samples.append(sample.cpu()) # Move generated sample to CPU for storage
 
