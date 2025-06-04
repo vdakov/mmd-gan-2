@@ -3,7 +3,6 @@ from torch.utils.data import TensorDataset, DataLoader
 from mnist1d.data import make_dataset, get_dataset_args
 
 from datasets.normalization import MinMaxNormalize, compute_min_max
-from datasets.transformed_dataset import TransformedTensorDataset
 
 def load_MNIST1D(batch_size=64, train_split=0.8, seed=42, normalize=True):
     args = get_dataset_args()

@@ -5,3 +5,5 @@ datasets/__pycache__/__init__.cpython-313.pyc
 datasets/__pycache__/control.cpython-313.pyc
 visualization/__pycache__/__init__.cpython-313.pyc
 visualization/__pycache__/plots.cpython-313.pyc
+model_weights
+model_weights/autoencoder_control-500.pth

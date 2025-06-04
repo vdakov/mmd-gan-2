@@ -53,46 +53,29 @@ def get_mixture_distribution(mixture_list, weights, size=(10000, 2)):
             raise ValueError(f"Unsupported distribution type: {distribution_type}. Check for typos and such!")
     return mixture_data
 
-def load_control(data, batch_size=64, num_classes=2, label_type="random", normalize=True):
-    """
-    label_type: "random" | "zeros" | "ones"
-    num_classes: only used if label_type == "random"
-    """
+def load_control(data, batch_size=64, normalize=True):
+    if normalize:
+        min_vals = data.min(axis=0)  
+        max_vals = data.max(axis=0)  
+        data = (data - min_vals) / (max_vals - min_vals)
+        
     train_data, test_data = sklearn.model_selection.train_test_split(data, test_size=0.2)
-    
-    # Convert data to tensors
     train_data = torch.tensor(train_data, dtype=torch.float32)
     test_data = torch.tensor(test_data, dtype=torch.float32)
 
-    # Create fake labels
-    if label_type == "random":
-        train_labels = torch.randint(0, num_classes, (train_data.shape[0],))
-        test_labels = torch.randint(0, num_classes, (test_data.shape[0],))
-    elif label_type == "zeros":
-        train_labels = torch.zeros(train_data.shape[0], dtype=torch.long)
-        test_labels = torch.zeros(test_data.shape[0], dtype=torch.long)
-    elif label_type == "ones":
-        train_labels = torch.ones(train_data.shape[0], dtype=torch.long)
-        test_labels = torch.ones(test_data.shape[0], dtype=torch.long)
-    else:
-        raise ValueError(f"Unsupported label_type '{label_type}'")
     
-        
-    transform = None
-    if normalize:
-        min_vals = train_data.min(dim=0)[0]
-        max_vals = train_data.max(dim=0)[0]
-        transform = MinMaxNormalize(min_vals, max_vals)
-    else:
-        min_vals = max_vals = None
-        
-
-    # Wrap in TensorDataset
-    trainset = TensorDataset(train_data, train_labels)
-    testset = TensorDataset(test_data, test_labels)
+    trainset = TensorDataset(train_data, train_data)
+    testset = TensorDataset(test_data, test_data)
 
     trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
     testloader = DataLoader(testset, batch_size=batch_size, shuffle=False)
 
     return trainloader, testloader, min_vals, max_vals
 
+class GlobalMinMaxNormalize:
+    def __init__(self, min_val, max_val):
+        self.min = min_val
+        self.max = max_val
+
+    def __call__(self, x):
+        return (x - self.min) / (self.max - self.min + 1e-8)

@@ -42,5 +42,5 @@ def load_CIFAR(save_path="datasets/data", batch_size=64, size=64, flatten=False,
     if normalize:
         return trainloader, testloader, min_val, max_val
     else:
-        return trainloader, testloader
+        return trainloader, testloader, None, None
 

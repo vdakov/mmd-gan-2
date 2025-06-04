@@ -46,7 +46,7 @@ def plot_3d_histogram(data, bins=20):
     plt.show()
     
     
-def plot_3d_kde(data):
+def plot_3d_kde(data, title="Sample title"):
     if data.shape[1] > 2:
         pca = PCA(n_components=2)
         data_2d = pca.fit_transform(data)
@@ -69,4 +69,5 @@ def plot_3d_kde(data):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_zlabel("Density")
+    plt.title(title)
     plt.show()

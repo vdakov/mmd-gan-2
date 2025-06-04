@@ -11,8 +11,11 @@ def get_scale_matrix(M, N, device):
     s2 = (torch.ones((M, 1)) * -1.0 / M).to(device)
     return torch.cat((s1, s2), 0)
 
+s = None
+
 def train_one_step(x, net, samples, optimizer, device, sigma=[1]):
-    samples = Variable(samples).to(device)
+    global s
+    samples = samples.to(device)
     gen_samples = net(samples)
     X = torch.cat((gen_samples, x), 0)
     XX = torch.matmul(X, X.t())
@@ -21,7 +24,8 @@ def train_one_step(x, net, samples, optimizer, device, sigma=[1]):
 
     M = gen_samples.size()[0]
     N = x.size()[0]
-    s = get_scale_matrix(M, N, device)
+    if s is None:
+        s = get_scale_matrix(M, N, device)
     S = torch.matmul(s, s.t())
 
     loss = 0
@@ -38,31 +42,32 @@ def train_one_step(x, net, samples, optimizer, device, sigma=[1]):
     return loss
 
 
-def train_gmmn(trainloader, autoencoder, data_size, noise_size, batch_size, num_epochs, device, save_path):
+def train_gmmn(trainloader, autoencoder, sigmas, data_size, noise_size, batch_size, num_epochs, device, save_path):
+    
 
     gmm_net = GMMN(noise_size, data_size).to(device)
+    gmmn_optimizer = optim.Adam(gmm_net.parameters(), lr=0.001)
     if os.path.exists(save_path):
         checkpoint = torch.load(save_path)
         gmm_net.load_state_dict(checkpoint['model_state_dict'])
         losses = checkpoint.get('losses', []) # Use .get() with a default to handle older checkpoints
         print("Loaded previously saved GMM Network and losses from checkpoint.")
     else:
-        gmmn_optimizer = optim.Adam(gmm_net.parameters(), lr=0.001)
+        
         losses = []
-
         epoch_pbar = tqdm(range(num_epochs), desc="GMMN Training Progress")
 
         for ep in epoch_pbar:
             avg_loss = 0
-            for idx, (x, _) in enumerate(tqdm(trainloader, desc=f"Epoch {ep+1}/{num_epochs} (Batch)", leave=False)):
+            for idx, (x, _) in enumerate(trainloader):
                 x = x.view(x.size()[0], -1)
                 with torch.no_grad():
-                    x = Variable(x).to(device)
+                    x = x.to(device)
                     encoded_x = autoencoder.encode(x)
 
                 # uniform random noise between [-1, 1]
                 random_noise = torch.rand((batch_size, noise_size)) * 2 - 1
-                loss = train_one_step(encoded_x, gmm_net, random_noise, gmmn_optimizer, device)
+                loss = train_one_step(encoded_x, gmm_net, random_noise, gmmn_optimizer, device, sigma=sigmas)
                 avg_loss += loss.item()
 
             avg_loss /= (idx + 1)
