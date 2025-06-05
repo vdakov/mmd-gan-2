@@ -5,47 +5,56 @@ import os
 import torch.optim as optim
 from torch.autograd import Variable
 
+def gaussian_kernel_matrix(x, y, sigma):
+    """Compute full Gaussian kernel matrix between x and y."""
+    # x: (n, d), y: (m, d)
+    x_norm = torch.sum(x**2, dim=1, keepdim=True)  # (n, 1)
+    y_norm = torch.sum(y**2, dim=1, keepdim=True)  # (m, 1)
+    dist_sq = x_norm - 2 * torch.mm(x, y.t()) + y_norm.t()  # (n, m)
+    return torch.exp(-dist_sq / (2 * sigma**2))
 
-def get_scale_matrix(M, N, device):
-    s1 = (torch.ones((N, 1)) * 1.0 / N).to(device)
-    s2 = (torch.ones((M, 1)) * -1.0 / M).to(device)
-    return torch.cat((s1, s2), 0)
+def mmd_loss(x_real, x_fake, sigmas=[1, 5, 10]):
+    """Unbiased MMD loss with full kernel matrix computation."""
+    loss = 0
+    n = x_real.size(0)
+    
+    for sigma in sigmas:
+        # Compute kernel matrices
+        k_real_real = gaussian_kernel_matrix(x_real, x_real, sigma)
+        k_fake_fake = gaussian_kernel_matrix(x_fake, x_fake, sigma)
+        k_real_fake = gaussian_kernel_matrix(x_real, x_fake, sigma)
+        
+        # Remove diagonals for unbiased estimate
+        real_real = (k_real_real.sum() - k_real_real.trace()) / (n*(n-1))
+        fake_fake = (k_fake_fake.sum() - k_fake_fake.trace()) / (n*(n-1))
+        real_fake = k_real_fake.mean()
+        
+        loss += real_real + fake_fake - 2 * real_fake
+        
+    return loss / len(sigmas) # so it is characteristic
 
-s = None
-
-def train_one_step(x, net, samples, optimizer, device, sigma=[1]):
-    global s
+# UPDATED TRAINING STEP
+def train_one_step(x, net, samples, optimizer, device, sigmas, clip_value=1.0):
     samples = samples.to(device)
     gen_samples = net(samples)
-    X = torch.cat((gen_samples, x), 0)
-    XX = torch.matmul(X, X.t())
-    X2 = torch.sum(X * X, 1, keepdim=True)
-    exp = XX - 0.5 * X2 - 0.5 * X2.t()
-
-    M = gen_samples.size()[0]
-    N = x.size()[0]
-    if s is None:
-        s = get_scale_matrix(M, N, device)
-    S = torch.matmul(s, s.t())
-
-    loss = 0
-    for v in sigma:
-        kernel_val = torch.exp(exp / v)
-        loss += torch.sum(S * kernel_val)
-
-    loss = torch.sqrt(loss)
-
+    
+    loss = mmd_loss(x, gen_samples, sigmas)
+    # loss = torch.sqrt(loss)
+    
     optimizer.zero_grad()
     loss.backward()
+    # Gradient clipping
+    torch.nn.utils.clip_grad_norm_(net.parameters(), clip_value)
     optimizer.step()
+    
+    return loss.item()
 
-    return loss
 
 
 def train_gmmn(trainloader, autoencoder, sigmas, data_size, noise_size, batch_size, num_epochs, device, save_path):
     
 
-    gmm_net = GMMN(noise_size, data_size).to(device)
+    gmm_net = GMMN(noise_size, data_size).to(device)    
     gmmn_optimizer = optim.Adam(gmm_net.parameters(), lr=0.001)
     if os.path.exists(save_path):
         checkpoint = torch.load(save_path)
@@ -67,8 +76,8 @@ def train_gmmn(trainloader, autoencoder, sigmas, data_size, noise_size, batch_si
 
                 # uniform random noise between [-1, 1]
                 random_noise = torch.rand((batch_size, noise_size)) * 2 - 1
-                loss = train_one_step(encoded_x, gmm_net, random_noise, gmmn_optimizer, device, sigma=sigmas)
-                avg_loss += loss.item()
+                loss = train_one_step(encoded_x, gmm_net, random_noise, gmmn_optimizer, device, sigmas)
+                avg_loss += loss
 
             avg_loss /= (idx + 1)
             losses.append(avg_loss)

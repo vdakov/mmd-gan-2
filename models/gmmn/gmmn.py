@@ -6,25 +6,17 @@ import torch
 class GMMN(nn.Module):
     def __init__(self, n_start, n_out, dropout_rate=0.5): # Added dropout_rate as an argument
         super(GMMN, self).__init__()
-        self.fc1 = nn.Linear(n_start, 64)
-        self.fc2 = nn.Linear(64, 256)
-        self.fc3 = nn.Linear(256, 256)
-        self.fc4 = nn.Linear(256, 784)
-        self.fc5 = nn.Linear(784, n_out)
-
-        # Define dropout layers
-        self.dropout = nn.Dropout(p=dropout_rate) # You can adjust the dropout rate (e.g., 0.5 is common)
+        self.fc1 = nn.Linear(n_start, 32)
+        self.fc2 = nn.Linear(32, 64)
+        self.fc3 = nn.Linear(64, 128)
+        self.fc4 = nn.Linear(128, n_out)
 
     def forward(self, samples):
         x = F.relu(self.fc1(samples))
-        x = self.dropout(x) # Apply dropout after the first activation
         x = F.relu(self.fc2(x))
-        x = self.dropout(x) # Apply dropout after the second activation
         x = F.relu(self.fc3(x))
-        x = self.dropout(x) # Apply dropout after the third activation
-        x = F.relu(self.fc4(x))
-        x = self.dropout(x) # Apply dropout after the fourth activation
-        x = torch.relu(self.fc5(x))
+        x = F.sigmoid(self.fc4(x))
+
         return x
 
     

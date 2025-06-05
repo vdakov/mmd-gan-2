@@ -20,14 +20,14 @@ class Autoencoder(nn.Module):
         return e, d
 
     def encode(self, x):
-        x = torch.relu(self.encoder_fc1(x))
+        x = self.encoder_fc1(x)
         x = self.dropout1(x)
-        x = torch.relu(self.encoder_fc2(x))
+        x = torch.sigmoid(self.encoder_fc2(x))
   
         return x
 
     def decode(self, x):
-        x = torch.relu(self.decoder_fc1(x))
+        x = torch.sigmoid(self.decoder_fc1(x))
         x = self.dropout2(x)
         x = torch.sigmoid(self.decoder_fc2(x))
         return x
