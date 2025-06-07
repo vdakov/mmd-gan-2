@@ -6,10 +6,18 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
-def compute_mmd(X, Y, sigma_list, const_diagonal=False, biased=True):
+import numpy as np
 
-    X = X.view(X.size(0), -1)
-    Y = Y.view(Y.size(0), -1)
+from datasets.cifar10 import load_CIFAR
+from datasets.mnist import load_MNIST
+from datasets.celebA import load_CELEB_A
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+
+def compute_mmd(X, Y, sigma_list, const_diagonal=False, biased=True):
 
     assert X.size(0) == Y.size(0), "Batch sizes of X and Y must match"
     m = X.size(0)
@@ -76,12 +84,52 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
 
 
-def get_dataloader(batch_size, image_size):
-    transform = transforms.Compose([
-        transforms.Resize(image_size),
-        transforms.CenterCrop(image_size),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5,) * 3, (0.5,) * 3),
-    ])
-    dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+def get_dataloader(dataset_name="cifar10", batch_size=64, image_size=64):
+    if dataset_name.lower() == "cifar10":
+        trainloader, _, nc = load_CIFAR(batch_size=batch_size)
+    elif dataset_name.lower() == "mnist":
+        trainloader, _, nc = load_MNIST(batch_size=batch_size)
+    elif dataset_name.lower() == "celeba":
+        trainloader, _, _, nc = load_CELEB_A(batch_size=batch_size)
+    else:
+        raise ValueError(f"Unsupported dataset: {dataset_name}")
+    return trainloader, nc
+
+def plot_losses(losses_D, losses_G, iterations, save_path):
+    plt.figure(figsize=(10,5))
+    plt.plot(iterations, losses_D, label="Discriminator Loss")
+    plt.plot(iterations, losses_G, label="Generator Loss")
+    plt.xlabel("Iterations")
+    plt.ylabel("Loss")
+    plt.title("Training Losses")
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(save_path)
+    plt.close()
+
+
+def smooth_curve(values, window_size=100):
+    return np.convolve(values, np.ones(window_size)/window_size, mode='valid')
+
+def plot_mmd2(mmd2_values, iterations, save_path):
+    plt.figure(figsize=(10, 5))
+    plt.plot(iterations, mmd2_values, label="MMD²", color='blue')
+    plt.xlabel("Generator Iterations")
+    plt.ylabel("MMD²")
+    plt.title("MMD² Distance over Training")
+    plt.yscale('log')  
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(save_path)
+    plt.close()
+
+def grad_norm(m, norm_type=2):
+    total_norm = 0.0
+    for p in m.parameters():
+        if p.grad is not None:
+            param_norm = p.grad.data.norm(norm_type)
+            total_norm += param_norm ** norm_type
+    total_norm = total_norm ** (1. / norm_type)
+    return total_norm
+
+

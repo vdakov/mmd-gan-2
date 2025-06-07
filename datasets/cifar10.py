@@ -4,7 +4,8 @@ import torch
 
 def load_CIFAR(save_path="datasets/data", batch_size=64):
     transform = transforms.Compose([
-        transforms.Resize(64), 
+        transforms.Resize(32),
+        transforms.CenterCrop(32),   
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  
     ])
@@ -15,4 +16,4 @@ def load_CIFAR(save_path="datasets/data", batch_size=64):
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False)
 
-    return trainloader, testloader
+    return trainloader, testloader, 3

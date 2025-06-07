@@ -103,5 +103,9 @@ class Discriminator(nn.Module):
     def forward(self, input):
         f_enc = self.encoder(input)              # (batch, nz, 1, 1)
         f_dec = self.decoder(f_enc)              # (batch, nc, isize, isize)
+
+        f_enc = f_enc.view(f_enc.size(0), -1)  # Flatten to (batch, nz)
+        f_dec = f_dec.view(f_dec.size(0), -1)
+
         return f_enc, f_dec
 

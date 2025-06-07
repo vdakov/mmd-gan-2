@@ -1,5 +1,4 @@
 data/
-mmdgan_experiment/
 __pycache__/
 datasets/__pycache__/__init__.cpython-313.pyc
 datasets/__pycache__/control.cpython-313.pyc
