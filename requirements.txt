@@ -9,8 +9,7 @@ datasets
 scikit-learn 
 pandas 
 jupyterlab
-<<<<<<< HEAD
 gdown
-=======
 mnist1d
->>>>>>> 933045324926cf4e4b968fed2d21cb2ee376298d
+torchmetrics
+torch-fidelity
