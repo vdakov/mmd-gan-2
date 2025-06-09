@@ -7,20 +7,11 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from datasets.normalization import compute_min_max
 
-<<<<<<< HEAD
-def load_CIFAR(save_path="datasets/data", batch_size=64):
-    transform = transforms.Compose([
-        transforms.Resize(32),
-        transforms.CenterCrop(32),   
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  
-=======
 
 def load_CIFAR(save_path="datasets/data", batch_size=64, size=64, flatten=False, normalize=True):
     raw_transform = transforms.Compose([
         transforms.Resize(size),
         transforms.ToTensor()
->>>>>>> 933045324926cf4e4b968fed2d21cb2ee376298d
     ])
     temp_train = CIFAR10(root=save_path, train=True, download=True, transform=raw_transform)
 
@@ -53,7 +44,3 @@ def load_CIFAR(save_path="datasets/data", batch_size=64, size=64, flatten=False,
     else:
         return trainloader, testloader
 
-<<<<<<< HEAD
-    return trainloader, testloader, 3
-=======
->>>>>>> 933045324926cf4e4b968fed2d21cb2ee376298d

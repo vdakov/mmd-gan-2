@@ -9,6 +9,7 @@ import torchvision.datasets as datasets
 import numpy as np
 
 from datasets.cifar10 import load_CIFAR
+from datasets.control import load_control
 from datasets.mnist import load_MNIST
 from datasets.celebA import load_CELEB_A
 
@@ -84,13 +85,15 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
 
 
-def get_dataloader(dataset_name="cifar10", batch_size=64, image_size=64):
+def get_dataloader(dataset_name="cifar10", batch_size=64, image_size=64, control_data=None):
     if dataset_name.lower() == "cifar10":
         trainloader, _, nc = load_CIFAR(batch_size=batch_size)
     elif dataset_name.lower() == "mnist":
         trainloader, _, nc = load_MNIST(batch_size=batch_size)
     elif dataset_name.lower() == "celeba":
         trainloader, _, _, nc = load_CELEB_A(batch_size=batch_size)
+    elif dataset_name.lower() == "control":
+        trainloader, _, _, _ = load_control(control_data, batch_size=1000)
     else:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
     return trainloader, nc
@@ -105,7 +108,7 @@ def plot_losses(losses_D, losses_G, iterations, save_path):
     plt.legend()
     plt.grid(True)
     plt.savefig(save_path)
-    plt.close()
+    plt.show()
 
 
 def smooth_curve(values, window_size=100):
@@ -121,7 +124,7 @@ def plot_mmd2(mmd2_values, iterations, save_path):
     plt.legend()
     plt.grid(True)
     plt.savefig(save_path)
-    plt.close()
+    plt.show()
 
 def grad_norm(m, norm_type=2):
     total_norm = 0.0
