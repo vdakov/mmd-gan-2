@@ -4,28 +4,19 @@ import torch.nn.functional as F
 import torch
 
 class GMMN(nn.Module):
-    def __init__(self, n_start, n_out):
+    def __init__(self, n_start, n_out, dropout_rate=0.5): # Added dropout_rate as an argument
         super(GMMN, self).__init__()
-        self.fc1 = nn.Linear(n_start, 64)
-        self.bn1 = nn.BatchNorm1d(64)
-
-        self.fc2 = nn.Linear(64, 256)
-        self.bn2 = nn.BatchNorm1d(256)
-
-        self.fc3 = nn.Linear(256, 256)
-        self.bn3 = nn.BatchNorm1d(256)
-
-        self.fc4 = nn.Linear(256, 784)
-        self.bn4 = nn.BatchNorm1d(784)
-
-        self.fc5 = nn.Linear(784, n_out)
+        self.fc1 = nn.Linear(n_start, 32)
+        self.fc2 = nn.Linear(32, 64)
+        self.fc3 = nn.Linear(64, 128)
+        self.fc4 = nn.Linear(128, n_out)
 
     def forward(self, samples):
-        x = F.relu(self.bn1(self.fc1(samples)))
-        x = F.relu(self.bn2(self.fc2(x)))
-        x = F.relu(self.bn3(self.fc3(x)))
-        x = F.relu(self.bn4(self.fc4(x)))
-        x = torch.sigmoid(self.fc5(x))  # Use torch.sigmoid (not F.sigmoid, which is deprecated)
+        x = F.relu(self.fc1(samples))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        x = F.sigmoid(self.fc4(x))
+
         return x
 
     

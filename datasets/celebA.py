@@ -36,4 +36,4 @@ def load_CELEB_A(save_path="datasets/data", batch_size=64, size=64, normalize=Tr
     if normalize:
         return trainloader, valloader, testloader, min_val, max_val
     else:
-        return trainloader, valloader, testloader
+        return trainloader, valloader, testloader, None, None

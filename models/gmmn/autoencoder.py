@@ -2,20 +2,17 @@ import torch.nn as nn
 import torch
 
 class Autoencoder(nn.Module):
-    def __init__(self, n_inp, n_encoded):
+    def __init__(self, n_inp, n_encoded, dropout_prob=0.5):
         super(Autoencoder, self).__init__()
         # Encoder
-        self.encoder_fc1 = nn.Linear(n_inp, 1024)
-        self.encoder_bn1 = nn.BatchNorm1d(1024)
+        self.encoder_fc1 = nn.Linear(n_inp, 64)
+        self.encoder_fc2 = nn.Linear(64, n_encoded)
+        self.dropout1 = nn.Dropout(p=dropout_prob) 
+        self.dropout2 = nn.Dropout(p=dropout_prob)
 
-        self.encoder_fc2 = nn.Linear(1024, n_encoded)
-        self.encoder_bn2 = nn.BatchNorm1d(n_encoded)
 
-        # Decoder
-        self.decoder_fc1 = nn.Linear(n_encoded, 1024)
-        self.decoder_bn1 = nn.BatchNorm1d(1024)
-
-        self.decoder_fc2 = nn.Linear(1024, n_inp)
+        self.decoder_fc1 = nn.Linear(n_encoded, 64)
+        self.decoder_fc2 = nn.Linear(64, n_inp)
 
     def forward(self, x):
         e = self.encode(x)
@@ -23,11 +20,14 @@ class Autoencoder(nn.Module):
         return e, d
 
     def encode(self, x):
-        x = torch.sigmoid(self.encoder_bn1(self.encoder_fc1(x)))
-        x = torch.sigmoid(self.encoder_bn2(self.encoder_fc2(x)))
+        x = self.encoder_fc1(x)
+        x = self.dropout1(x)
+        x = torch.sigmoid(self.encoder_fc2(x))
+  
         return x
 
     def decode(self, x):
-        x = torch.sigmoid(self.decoder_bn1(self.decoder_fc1(x)))
-        x = torch.sigmoid(self.decoder_fc2(x))  # Output activation depends on your data distribution
+        x = torch.sigmoid(self.decoder_fc1(x))
+        x = self.dropout2(x)
+        x = torch.sigmoid(self.decoder_fc2(x))
         return x
