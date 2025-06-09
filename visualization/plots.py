@@ -46,7 +46,7 @@ def plot_3d_histogram(data, bins=20):
     plt.show()
     
     
-def plot_3d_kde(data, title="Sample title"):
+def plot_3d_kde(data, title="Sample title", bounds=None):
     if data.shape[1] > 2:
         pca = PCA(n_components=2)
         data_2d = pca.fit_transform(data)
@@ -56,8 +56,16 @@ def plot_3d_kde(data, title="Sample title"):
         xlabel, ylabel = "X", "Y"
 
     kde = gaussian_kde(data_2d.T)
-    x = np.linspace(data_2d[:, 0].min(), data_2d[:, 0].max(), 100)
-    y = np.linspace(data_2d[:, 1].min(), data_2d[:, 1].max(), 100)
+
+    # Determine bounds
+    if bounds is not None:
+        x_min, x_max, y_min, y_max = bounds
+    else:
+        x_min, x_max = data_2d[:, 0].min(), data_2d[:, 0].max()
+        y_min, y_max = data_2d[:, 1].min(), data_2d[:, 1].max()
+
+    x = np.linspace(x_min, x_max, 100)
+    y = np.linspace(y_min, y_max, 100)
     X, Y = np.meshgrid(x, y)
     positions = np.vstack([X.ravel(), Y.ravel()])
     Z = kde(positions).reshape(X.shape)

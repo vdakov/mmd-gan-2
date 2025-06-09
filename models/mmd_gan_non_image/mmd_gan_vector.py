@@ -30,7 +30,7 @@ class Decoder(nn.Module):
             layers.append(nn.ReLU(True))
             prev_dim = hdim
         layers.append(nn.Linear(prev_dim, output_dim))  # Output layer
-        layers.append(nn.Tanh())  # Optional: use based on your data range
+        layers.append(nn.Sigmoid())  # Optional: use based on your data range
         self.main = nn.Sequential(*layers)
 
     def forward(self, x):
