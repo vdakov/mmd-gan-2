@@ -43,8 +43,6 @@ def train_mmd_gan_vector(dataloader, data_dim, latent_dim=100, hidden_dims_enc=[
 
     one = torch.tensor(1.0, device=device)
     mone = one * -1
-
-    fixed_noise = torch.randn(batch_size, latent_dim, device=device)
     
     if os.path.exists(os.path.join(experiment_dir, f"netG_{max_iter}.pth")):
         save_path = os.path.join(experiment_dir, experiment_name)
@@ -108,9 +106,12 @@ def train_mmd_gan_vector(dataloader, data_dim, latent_dim=100, hidden_dims_enc=[
 
 
                     # Full discriminator loss (adjust weights as per paper)
-                    lambda_ae_x = 8.0
-                    lambda_ae_y = 8.0
-                    lambda_rg = 16.0
+                    # lambda_ae_x = 8.0
+                    # lambda_ae_y = 8.0
+                    # lambda_rg = 16.0
+                    lambda_ae_x = 2.0
+                    lambda_ae_y = 2.0
+                    lambda_rg = 4.0
 
                     hinge = hinge_loss(f_enc_real.mean(0), f_enc_fake.mean(0))
                     loss_D = torch.sqrt(mmd2) + lambda_rg * hinge - lambda_ae_x * L2_real - lambda_ae_y * L2_fake
