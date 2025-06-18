@@ -3,17 +3,10 @@ import torchvision.transforms as transforms
 import torch
 import matplotlib.pyplot as plt
 
-<<<<<<< HEAD
-def load_MNIST(save_path="datasets/data", batch_size=64):
-    transform = transforms.Compose([
-        transforms.Resize(32),
-        transforms.CenterCrop(32),  
-=======
 
 def load_MNIST(save_path="datasets/data", batch_size=64, size=28, flatten=False, normalize=True):
     transform_list = [
         transforms.Resize(size),
->>>>>>> 933045324926cf4e4b968fed2d21cb2ee376298d
         transforms.ToTensor(),
     ]
 
@@ -31,8 +24,4 @@ def load_MNIST(save_path="datasets/data", batch_size=64, size=28, flatten=False,
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False)
 
-<<<<<<< HEAD
-    return trainloader, testloader, 1
-=======
     return trainloader, testloader, 0.5, 0.5
->>>>>>> 933045324926cf4e4b968fed2d21cb2ee376298d
