@@ -45,9 +45,12 @@ def train_mmd_gan_vector(dataloader, data_dim, latent_dim=100, hidden_dims_enc=[
     mone = one * -1
     
     if os.path.exists(os.path.join(experiment_dir, f"netG_{max_iter}.pth")):
-        save_path = os.path.join(experiment_dir, experiment_name)
-        print("Loading existing models...")
-        checkpoint = torch.load(save_path)
+        netG_path = os.path.join(experiment_dir, f"netG_{max_iter}.pth")
+        netD_path = os.path.join(experiment_dir, f"netD_{max_iter}.pth")
+        print("Loading existing models...")    
+        netG.load_state_dict(torch.load(netG_path, map_location=device))
+        netD.load_state_dict(torch.load(netD_path, map_location=device))
+
         
         
     else:
@@ -95,7 +98,7 @@ def train_mmd_gan_vector(dataloader, data_dim, latent_dim=100, hidden_dims_enc=[
                     fake_images = netG(noise).detach()
                     f_enc_fake, f_dec_fake = netD(fake_images)
 
-                    # Compute MMD loss between real and fake features
+                    # Compute MMD loss betn ween real and fake features
 
                     mmd2 = compute_mmd(f_enc_real, f_enc_fake, sigma_list)
                     mmd2 = nn.functional.relu(mmd2)
