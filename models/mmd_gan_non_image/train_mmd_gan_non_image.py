@@ -52,7 +52,6 @@ def train_mmd_gan_vector(dataloader, data_dim, latent_dim=100, hidden_dims_enc=[
         netD.load_state_dict(torch.load(netD_path, map_location=device))
 
         
-        
     else:
 
         print("Starting training...")
@@ -114,10 +113,11 @@ def train_mmd_gan_vector(dataloader, data_dim, latent_dim=100, hidden_dims_enc=[
                     # lambda_rg = 16.0
                     lambda_ae_x = 2.0
                     lambda_ae_y = 2.0
-                    lambda_rg = 4.0
+                    lambda_rg   = 4.0  # start small
+
 
                     hinge = hinge_loss(f_enc_real.mean(0), f_enc_fake.mean(0))
-                    loss_D = torch.sqrt(mmd2) + lambda_rg * hinge - lambda_ae_x * L2_real - lambda_ae_y * L2_fake
+                    loss_D = torch.sqrt(mmd2) + lambda_rg * hinge - min(lambda_ae_x * L2_real + lambda_ae_y * L2_fake, 0)
 
                     loss_D.backward(mone)
                     optimizerD.step()
