@@ -11,7 +11,7 @@ def calculate_hotelling_t_squared(X, Y):
 
     if p_x != p_y:
         raise ValueError("Number of dimensions must be the same for both datasets.")
-    p = p_x # Number of dimensions
+    
 
     mean_x = np.mean(X, axis=0) # Mean vector for X
     mean_y = np.mean(Y, axis=0) # Mean vector for Y
@@ -23,6 +23,7 @@ def calculate_hotelling_t_squared(X, Y):
 
     try:
         pooled_cov = ((n_x - 1) * cov_x + (n_y - 1) * cov_y) / (n_x + n_y - 2)
+        pooled_cov += np.eye(pooled_cov.shape[0]) * 1e-6
         pooled_cov_inv = np.linalg.inv(pooled_cov)
     except np.linalg.LinAlgError:
         # Handle singular matrix case - for simplicity here, we'll return a large value.
@@ -37,27 +38,23 @@ def calculate_hotelling_t_squared(X, Y):
 
 def bootstrap_hypothesis_test(original_data, generating_function, generating_function_args, alpha=0.05, num_iterations=1000): 
     generated_data = generating_function(*generating_function_args)
-    generated_mean = np.mean(generated_data)
-    generated_var = np.var(generated_data)
-    n_x, p = original_data.shape # n_x: number of observations, p: number of dimensions
+    generated_mean = np.mean(generated_data, axis=0)
+    generated_var = np.var(generated_data, axis=0)
+    n_x = original_data.shape[0] # n_x: number of observations, p: number of dimensions
     n_y = generated_data.shape[0]
 
     
-    original_mean = np.mean(original_data)
-    original_var = np.var(original_data)
-
+    original_mean = np.mean(original_data, axis=0)
+    original_var = np.var(original_data, axis=0)
+    # print(generated_mean, generated_var, original_mean, original_var)
     z = np.mean(np.concatenate((original_data, generated_data), axis=0), axis=0)
 
     
     # t = calculate_t(original_mean, generated_mean, original_var, generated_var, n_x, n_y)
     t = calculate_hotelling_t_squared(original_data, generated_data)
     
-    zero_centered_original = np.add(np.subtract(original_data, original_mean), z) 
-    zero_centered_generated = np.add(np.subtract(generated_data, generated_mean), z) 
     
-    t_s = bootstrap_multidimensional(zero_centered_original, zero_centered_generated, n_x, n_y, num_iterations)
-    print(t_s)
-    
+    t_s = bootstrap_multidimensional(original_data, generated_data, n_x, n_y, num_iterations)
     p_value = np.sum(np.abs(t_s) >= np.abs(t)) / num_iterations
     
     if p_value < alpha:
@@ -67,20 +64,19 @@ def bootstrap_hypothesis_test(original_data, generating_function, generating_fun
 
     return p_value
 
-def bootstrap_multidimensional(zero_centered_x, zero_centered_y, n_x, n_y, num_iterations):
+def bootstrap_multidimensional(x, y, n_x, n_y, num_iterations):
     """
     Performs bootstrap resampling for multidimensional data and calculates Hotelling's T-squared.
     zero_centered_x and zero_centered_y are 2D arrays (rows are observations, columns are dimensions).
     """
     t_squared_s = []
-    p = zero_centered_x.shape[1] # Number of dimensions
 
     for _ in range(num_iterations):
         sample_x_indices = np.random.choice(n_x, n_x, replace=True)
         sample_y_indices = np.random.choice(n_y, n_y, replace=True)
 
-        sample_x = zero_centered_x[sample_x_indices, :]
-        sample_y = zero_centered_y[sample_y_indices, :]
+        sample_x = x[sample_x_indices, :]
+        sample_y = y[sample_y_indices, :]
         
         t_squared_s.append(calculate_hotelling_t_squared(sample_x, sample_y))
         
