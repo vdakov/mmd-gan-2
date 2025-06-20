@@ -49,10 +49,8 @@ def main(dataset_name="cifar10"):
 
     os.makedirs(experiment_dir, exist_ok=True)
 
-    # Data loader
     dataloader, nc = get_dataloader(dataset_name=dataset_name, batch_size=batch_size, image_size=image_size)
 
-    # Create models
     netG = Generator(image_size, nc, nz, ngf).to(device)
     netD = Discriminator(image_size, nc, nz, ndf, ngf).to(device)
     hinge_loss = OneSidedHingeLoss().to(device)
@@ -61,7 +59,6 @@ def main(dataset_name="cifar10"):
     netD.apply(weights_init)
     hinge_loss.apply(weights_init)
 
-    # Optimizers
     optimizerG = optim.RMSprop(netG.parameters(), lr=lr)
     optimizerD = optim.RMSprop(netD.parameters(), lr=lr)
 
@@ -80,7 +77,6 @@ def main(dataset_name="cifar10"):
         i = 0
         while i < len(dataloader):
 
-            # (1) Update D network
             for p in netD.parameters():
                 p.requires_grad = True
 
@@ -105,25 +101,20 @@ def main(dataset_name="cifar10"):
                 real_images = data[0].to(device)
                 batch_size_cur = real_images.size(0)
 
-                # Forward pass real images through D
                 f_enc_real, f_dec_real = netD(real_images)
 
-                # Sample noise and generate fake images
                 noise = torch.randn(batch_size_cur, nz, 1, 1, device=device)
                 fake_images = netG(noise).detach()
                 f_enc_fake, f_dec_fake = netD(fake_images)
 
-                # Compute MMD loss between real and fake features
 
                 mmd2 = compute_mmd(f_enc_real, f_enc_fake, sigma_list)
                 mmd2 = nn.functional.relu(mmd2)
 
-                # Autoencoder losses (L2 between input images and decoded output)
                 L2_real = nn.functional.mse_loss(f_dec_real.view(batch_size_cur, -1), real_images.view(batch_size_cur, -1))
                 L2_fake = nn.functional.mse_loss(f_dec_fake.view(batch_size_cur, -1), fake_images.view(batch_size_cur, -1))
 
 
-                # Full discriminator loss (adjust weights as per paper)
                 lambda_ae_x = 8.0
                 lambda_ae_y = 8.0
                 lambda_rg = 16.0
@@ -135,8 +126,6 @@ def main(dataset_name="cifar10"):
                 optimizerD.step()
 
                 last_loss_D = loss_D.detach()
-
-            # (2) Update G network
 
             for p in netD.parameters():
                 p.requires_grad = False
@@ -177,7 +166,6 @@ def main(dataset_name="cifar10"):
 
                 gen_iterations += 1
 
-            # Logging
             if gen_iterations % 500 == 0:
                 elapsed = (time.time() - start_time) / 60
 

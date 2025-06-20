@@ -63,7 +63,7 @@ class Decoder(nn.Module):
 
     def forward(self, input):
         return self.main(input)
-    
+
 class OneSidedHingeLoss(nn.Module):
     def __init__(self):
         super(OneSidedHingeLoss, self).__init__()
@@ -74,11 +74,7 @@ class OneSidedHingeLoss(nn.Module):
 
 
 class Generator(nn.Module):
-    """
-    Generator wraps the Decoder.
-    Input: noise tensor (batch_size, k, 1, 1)
-    Output: generated image tensor (batch_size, nc, isize, isize)
-    """
+
     def __init__(self, isize, nc, nz=100, ngf=64):
         super().__init__()
         self.decoder = Decoder(isize, nc, k=nz, ngf=ngf)
@@ -88,20 +84,14 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-    """
-    Discriminator wraps Encoder + Decoder.
-    Input: image tensor (batch_size, nc, isize, isize)
-    Outputs:
-        f_enc: latent feature (batch_size, k, 1, 1)
-        f_dec: reconstructed image (batch_size, nc, isize, isize)
-    """
+
     def __init__(self, isize, nc, nz=100, ndf=64, ngf=64):
         super().__init__()
         self.encoder = Encoder(isize, nc, k=nz, ndf=ndf)
         self.decoder = Decoder(isize, nc, k=nz, ngf=ngf)
 
     def forward(self, input):
-        f_enc = self.encoder(input)              # (batch, nz, 1, 1)
-        f_dec = self.decoder(f_enc)              # (batch, nc, isize, isize)
+        f_enc = self.encoder(input)
+        f_dec = self.decoder(f_enc)
         return f_enc, f_dec
 
